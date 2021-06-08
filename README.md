@@ -29,7 +29,7 @@ python3 agreement.py data/<dataset>-crowd.tsv
 # Annotation
 
 You can find an IPython notebook with a code for the data collection process. For the quality control, we use a special class, `TaskProcessor`, that
-gets all the submits that are not accepted or rejected at the moment, calculates workers' skills, and checks if a submit should be accepted and rejected.
+gets all the submits that are not accepted or rejected at the moment, calculates workers' skills, and checks if a submit should be accepted or rejected.
 # License
 
 ## Code
