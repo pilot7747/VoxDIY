@@ -1,0 +1,100 @@
+{
+  "view": {
+    "type": "view.list",
+    "items": [
+      {
+        "label": "Listen to the audio",
+        "type": "view.audio",
+        "url": {
+          "type": "data.input",
+          "path": "audio"
+        },
+        "validation": {
+          "type": "condition.played-fully",
+          "hint": "Listen to the audio"
+        }
+      },
+      {
+        "type": "field.button-radio-group",
+        "label": "Does the audio play properly?",
+        "options": [
+          {
+            "label": "Yes",
+            "value": "yes"
+          },
+          {
+            "label": "No",
+            "value": "no"
+          }
+        ],
+        "validation": {
+          "type": "condition.required",
+          "hint": "Answer to the question"
+        },
+        "data": {
+          "type": "data.output",
+          "path": "playing"
+        }
+      },
+      {
+        "type": "helper.if",
+        "condition": {
+          "type": "condition.equals",
+          "data": {
+            "type": "data.output",
+            "path": "playing"
+          },
+          "to": "yes"
+        },
+        "then": {
+          "type": "field.textarea",
+          "label": "Write down what you heard:",
+          "data": {
+            "type": "data.output",
+            "path": "transcription"
+          },
+          "validation": {
+            "type": "condition.required",
+            "hint": "Type the text"
+          }
+        }
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "type": "plugin.toloka",
+      "layout": {
+        "kind": "scroll",
+        "taskWidth": 500
+      }
+    },
+    {
+      "1": {
+        "type": "action.set",
+        "data": {
+          "type": "data.output",
+          "path": "playing"
+        },
+        "payload": "yes"
+      },
+      "2": {
+        "type": "action.set",
+        "data": {
+          "type": "data.output",
+          "path": "playing"
+        },
+        "payload": "no"
+      },
+      "3": {
+        "type": "action.set",
+        "data": {
+          "type": "data.output",
+          "path": "playing"
+        },
+        "payload": "error"
+      },
+      "type": "plugin.hotkeys"
+    }
+  ]
+}
