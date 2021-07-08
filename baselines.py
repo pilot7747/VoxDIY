@@ -69,7 +69,8 @@ def main() -> None:
     df_gt['rasa_result'] = rasa_result
     df_gt['hrrasa_result'] = hrrasa_result
 
-    df_gt.to_csv(args.output, sep='\t')
+    if args.output is not None:
+        df_gt.to_csv(args.output, sep='\t')
 
     print('RASA:', np.mean([wer(x['transcription'].split(), x['rasa_result'].split()) for _, x in df_gt.iterrows()]))
     print('HRRASA:', np.mean([wer(x['transcription'].split(), x['hrrasa_result'].split()) for _, x in df_gt.iterrows()]))
