@@ -38,6 +38,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('gt', type=argparse.FileType('r', encoding='UTF-8'))
     parser.add_argument('toloka', type=argparse.FileType('r', encoding='UTF-8'))
+    parser.add_argument('-o', '--output', nargs='?', type=argparse.FileType('w'))
     parser.add_argument('--ru', action='store_true')
     args = parser.parse_args()
 
@@ -58,7 +59,7 @@ def main() -> None:
     if not args.ru:
         encoder = SentenceTransformer('paraphrase-distilroberta-base-v1')
     else:
-        encoder = BertEncoder()  
+        encoder = BertEncoder()
 
     rasa_result = TextRASA(encoder=encoder.encode).fit_predict(df_toloka)
     hrrasa_result = TextHRRASA(encoder=encoder.encode).fit_predict(df_toloka)
@@ -67,6 +68,8 @@ def main() -> None:
     df_gt['rover_result'] = rover_result
     df_gt['rasa_result'] = rasa_result
     df_gt['hrrasa_result'] = hrrasa_result
+
+    df_gt.to_csv(args.output, sep='\t')
 
     print('RASA:', np.mean([wer(x['transcription'].split(), x['rasa_result'].split()) for _, x in df_gt.iterrows()]))
     print('HRRASA:', np.mean([wer(x['transcription'].split(), x['hrrasa_result'].split()) for _, x in df_gt.iterrows()]))
