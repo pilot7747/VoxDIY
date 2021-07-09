@@ -39,6 +39,7 @@ def main() -> None:
         df_baselines[method + '_result'] = df_baselines[method + '_result'].apply(normalize)
         df_baselines[method + '_length'] = df_baselines[method + '_result'].str.split(' ').apply(len)
         df_baselines[method + '_wer'] = df_baselines.apply(partial(wer_scorer, column=method + '_result'), axis=1)
+        df_baselines[method + '_correct'] = df_baselines[method + '_wer'] == 0
 
         assert not df_baselines[method + '_result'].isna().values.any(), 'NAs appear in the baselines dataset'
 
@@ -50,19 +51,34 @@ def main() -> None:
     df_wer = pd.merge(df_wer, df_baselines, on='audio')
     assert len(df_wer) == len(df_baselines), 'joint WER dataset lengths mismatch'
 
+    df_wer['has_correct'] = df_wer["min_wer"] == 0
+    df_wer['all_correct'] = df_wer["max_wer"] == 0
+
     print(f'# of transcriptions is {len(df_wer)}')
     print()
 
     print(f'# of totally correct Toloka transcriptions is {len(df_wer[df_wer["max_wer"] == 0])}')
     print('# of partially correct Toloka transcriptions is',
-          len(df_wer[(df_wer["max_wer"] > 0) & (df_wer["min_wer"] == 0)]))
+          len(df_wer[~df_wer["all_correct"] & df_wer['has_correct']]))
     print('# of totally incorrect Toloka transcriptions is',
-          len(df_wer[(df_wer["max_wer"] > 0) & (df_wer["min_wer"] > 0)]))
+          len(df_wer[~df_wer["all_correct"] & ~df_wer['has_correct']]))
 
     for method in ('rover', 'rasa', 'hrrasa'):
         print()
-        print(f'# of totally correct {method.upper()} transcriptions is '
-              f'{len(df_wer[df_wer[method + "_wer"] == 0])}')
+        print(f'# of correct {method.upper()} transcriptions is {len(df_wer[df_wer[method + "_correct"]])}')
+
+        print(f'# of correct {method.upper()} transcriptions where the crowd was totally correct is '
+              f'{len(df_wer[df_wer["all_correct"] & df_wer[method + "_correct"]])}')
+        print(f'# of correct {method.upper()} transcriptions where the crowd was totally incorrect is '
+              f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["has_correct"] & df_wer[method + "_correct"]])}')
+        print(f'# of incorrect {method.upper()} transcriptions where the crowd was totally correct is '
+              f'{len(df_wer[df_wer["all_correct"] & ~df_wer[method + "_correct"]])}')
+        print(f'# of incorrect {method.upper()} transcriptions where the crowd was totally incorrect is '
+              f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["has_correct"] & ~df_wer[method + "_correct"]])}')
+        print(f'# of correct {method.upper()} transcriptions where the crowd was partially correct is '
+              f'{len(df_wer[df_wer["has_correct"] & df_wer[method + "_correct"]])}')
+        print(f'# of incorrect {method.upper()} transcriptions where the crowd was partially correct is '
+              f'{len(df_wer[df_wer["has_correct"] & ~df_wer[method + "_correct"]])}')
 
         print(f'# of {method.upper()} transcriptions better than the worst of Toloka is '
               f'{len(df_wer[df_wer[method + "_wer"] < df_wer["max_wer"]])}')
