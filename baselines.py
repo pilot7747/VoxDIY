@@ -17,10 +17,6 @@ from agreement import normalize
 from rover import ROVER
 
 
-def wer_scorer(row: pd.Series) -> float:
-    return wer(row['transcription'], row['OUTPUT:transcription'])
-
-
 class BertEncoder:
     def __init__(self):
         self.model = AutoModel.from_pretrained("DeepPavlov/rubert-base-cased")

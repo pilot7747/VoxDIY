@@ -3,6 +3,7 @@
 __author__ = 'Dmitry Ustalov'
 
 import argparse
+from functools import partial
 
 import pandas as pd
 from jiwer import wer
@@ -10,8 +11,8 @@ from jiwer import wer
 from agreement import normalize
 
 
-def wer_scorer(row: pd.Series) -> float:
-    return wer(row['transcription'], row['OUTPUT:transcription'])
+def wer_scorer(row: pd.Series, column: str) -> float:
+    return wer(row['transcription'], row[column])
 
 
 def main() -> None:
@@ -34,7 +35,7 @@ def main() -> None:
 
     assert len(df) == len(df_toloka), f'dataset size mismatch: merged ({len(df)}) vs. toloka ({len(df_toloka)})'
 
-    df['wer'] = df.apply(wer_scorer, axis=1)
+    df['wer'] = df.apply(partial(wer_scorer, column='OUTPUT:transcription'), axis=1)
 
     df_oracle = df.groupby('audio').aggregate({'wer': 'min'})
 
