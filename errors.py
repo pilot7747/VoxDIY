@@ -12,6 +12,17 @@ from agreement import normalize
 from oracle import wer_scorer
 
 
+def extract_df(df_wer: pd.DataFrame, method: str, error: str) -> pd.DataFrame:
+    df = df_wer.sort_values(method + '_wer', ascending=False)
+
+    df['method'] = method
+    df['error'] = error
+    df['result'] = df[method + '_result']
+    df['wer'] = df[method + '_wer']
+
+    return df[['method', 'error', 'audio', 'transcription', 'result', 'wer']]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('gt', type=argparse.FileType('r', encoding='UTF-8'))
@@ -49,9 +60,10 @@ def main() -> None:
     df_wer = df.groupby('audio').agg(min_wer=('wer', 'min'), max_wer=('wer', 'max'),
                                      avg_wer=('wer', 'mean')).reset_index()
     df_wer = pd.merge(df_wer, df_baselines, on='audio')
+
     assert len(df_wer) == len(df_baselines), 'joint WER dataset lengths mismatch'
 
-    df_wer['has_correct'] = df_wer["min_wer"] == 0
+    df_wer['any_correct'] = df_wer["min_wer"] == 0
     df_wer['all_correct'] = df_wer["max_wer"] == 0
 
     print(f'# of transcriptions is {len(df_wer)}')
@@ -59,9 +71,11 @@ def main() -> None:
 
     print(f'# of totally correct Toloka transcriptions is {len(df_wer[df_wer["max_wer"] == 0])}')
     print('# of partially correct Toloka transcriptions is',
-          len(df_wer[~df_wer["all_correct"] & df_wer['has_correct']]))
+          len(df_wer[~df_wer["all_correct"] & df_wer['any_correct']]))
     print('# of totally incorrect Toloka transcriptions is',
-          len(df_wer[~df_wer["all_correct"] & ~df_wer['has_correct']]))
+          len(df_wer[~df_wer["all_correct"] & ~df_wer['any_correct']]))
+
+    df_errors = pd.DataFrame()
 
     for method in ('rover', 'rasa', 'hrrasa'):
         print()
@@ -70,17 +84,33 @@ def main() -> None:
         print(f'# of correct {method.upper()} transcriptions where the crowd was totally correct is '
               f'{len(df_wer[df_wer["all_correct"] & df_wer[method + "_correct"]])}')
         print(f'# of correct {method.upper()} transcriptions where the crowd was totally incorrect is '
-              f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["has_correct"] & df_wer[method + "_correct"]])}')
+              f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["any_correct"] & df_wer[method + "_correct"]])}')
 
         print(f'# of incorrect {method.upper()} transcriptions where the crowd was totally correct is '
               f'{len(df_wer[df_wer["all_correct"] & ~df_wer[method + "_correct"]])}')
+
+        df_errors = df_errors.append(extract_df(
+            df_wer[df_wer["all_correct"] & ~df_wer[method + "_correct"]],
+            method, 'all_correct')
+        )
+
         print(f'# of incorrect {method.upper()} transcriptions where the crowd was totally incorrect is '
-              f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["has_correct"] & ~df_wer[method + "_correct"]])}')
+              f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["any_correct"] & ~df_wer[method + "_correct"]])}')
+
+        df_errors = df_errors.append(extract_df(
+            df_wer[~df_wer["all_correct"] & ~df_wer["any_correct"] & ~df_wer[method + "_correct"]],
+            method, 'any_correct')
+        )
 
         print(f'# of correct {method.upper()} transcriptions where the crowd was partially correct is '
-              f'{len(df_wer[df_wer["has_correct"] & df_wer[method + "_correct"]])}')
+              f'{len(df_wer[df_wer["any_correct"] & df_wer[method + "_correct"]])}')
         print(f'# of incorrect {method.upper()} transcriptions where the crowd was partially correct is '
-              f'{len(df_wer[df_wer["has_correct"] & ~df_wer[method + "_correct"]])}')
+              f'{len(df_wer[df_wer["any_correct"] & ~df_wer[method + "_correct"]])}')
+
+        df_errors = df_errors.append(extract_df(
+            df_wer[df_wer["any_correct"] & ~df_wer[method + "_correct"]],
+            method, 'all_incorrect')
+        )
 
         print(f'# of {method.upper()} transcriptions better than the worst of Toloka is '
               f'{len(df_wer[df_wer[method + "_wer"] < df_wer["max_wer"]])}')
@@ -96,6 +126,9 @@ def main() -> None:
               f'{np.corrcoef(df_wer["min_wer"], df_wer[method + "_wer"]).item(1):.4f} '
               'and to the Toloka average is '
               f'{np.corrcoef(df_wer["avg_wer"], df_wer[method + "_wer"]).item(1):.4f}')
+
+    if args.output is not None:
+        df_errors.to_csv(args.output, sep='\t', index=False)
 
 
 if __name__ == '__main__':
