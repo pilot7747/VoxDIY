@@ -71,10 +71,12 @@ def main() -> None:
               f'{len(df_wer[df_wer["all_correct"] & df_wer[method + "_correct"]])}')
         print(f'# of correct {method.upper()} transcriptions where the crowd was totally incorrect is '
               f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["has_correct"] & df_wer[method + "_correct"]])}')
+
         print(f'# of incorrect {method.upper()} transcriptions where the crowd was totally correct is '
               f'{len(df_wer[df_wer["all_correct"] & ~df_wer[method + "_correct"]])}')
         print(f'# of incorrect {method.upper()} transcriptions where the crowd was totally incorrect is '
               f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["has_correct"] & ~df_wer[method + "_correct"]])}')
+
         print(f'# of correct {method.upper()} transcriptions where the crowd was partially correct is '
               f'{len(df_wer[df_wer["has_correct"] & df_wer[method + "_correct"]])}')
         print(f'# of incorrect {method.upper()} transcriptions where the crowd was partially correct is '
