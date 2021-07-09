@@ -84,32 +84,42 @@ def main() -> None:
         print(f'# of correct {method.upper()} transcriptions where the crowd was totally correct is '
               f'{len(df_wer[df_wer["all_correct"] & df_wer[method + "_correct"]])}')
         print(f'# of correct {method.upper()} transcriptions where the crowd was totally incorrect is '
-              f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["any_correct"] & df_wer[method + "_correct"]])}')
+              f'{len(df_wer[~df_wer["any_correct"] & df_wer[method + "_correct"]])}')
 
         print(f'# of incorrect {method.upper()} transcriptions where the crowd was totally correct is '
               f'{len(df_wer[df_wer["all_correct"] & ~df_wer[method + "_correct"]])}')
 
+        # all_correct: all crowd responses are correct, but the method is not correct
         df_errors = df_errors.append(extract_df(
             df_wer[df_wer["all_correct"] & ~df_wer[method + "_correct"]],
             method, 'all_correct')
         )
 
         print(f'# of incorrect {method.upper()} transcriptions where the crowd was totally incorrect is '
-              f'{len(df_wer[~df_wer["all_correct"] & ~df_wer["any_correct"] & ~df_wer[method + "_correct"]])}')
+              f'{len(df_wer[~df_wer["any_correct"] & ~df_wer[method + "_correct"]])}')
 
+        # all_incorrect: all crowd responses are not correct and the method is not correct
         df_errors = df_errors.append(extract_df(
-            df_wer[~df_wer["all_correct"] & ~df_wer["any_correct"] & ~df_wer[method + "_correct"]],
-            method, 'any_correct')
+            df_wer[~df_wer["any_correct"] & ~df_wer[method + "_correct"]],
+            method, 'all_incorrect')
         )
 
         print(f'# of correct {method.upper()} transcriptions where the crowd was partially correct is '
-              f'{len(df_wer[df_wer["any_correct"] & df_wer[method + "_correct"]])}')
-        print(f'# of incorrect {method.upper()} transcriptions where the crowd was partially correct is '
-              f'{len(df_wer[df_wer["any_correct"] & ~df_wer[method + "_correct"]])}')
+              f'{len(df_wer[df_wer["any_correct"] & ~df_wer["all_correct"] & df_wer[method + "_correct"]])}')
 
+        # any_helpful (not an error): one of crowd responses is correct and the method is correct
         df_errors = df_errors.append(extract_df(
-            df_wer[df_wer["any_correct"] & ~df_wer[method + "_correct"]],
-            method, 'all_incorrect')
+            df_wer[df_wer["any_correct"] & ~df_wer["all_correct"] & df_wer[method + "_correct"]],
+            method, 'any_helpful')
+        )
+
+        print(f'# of incorrect {method.upper()} transcriptions where the crowd was partially correct is '
+              f'{len(df_wer[df_wer["any_correct"] & ~df_wer["all_correct"] & ~df_wer[method + "_correct"]])}')
+
+        # any_correct: one of crowd responses is correct, but the method is not correct
+        df_errors = df_errors.append(extract_df(
+            df_wer[df_wer["any_correct"] & ~df_wer["all_correct"] & ~df_wer[method + "_correct"]],
+            method, 'any_correct')
         )
 
         print(f'# of {method.upper()} transcriptions better than the worst of Toloka is '
