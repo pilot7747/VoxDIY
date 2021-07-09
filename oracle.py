@@ -37,13 +37,16 @@ def main() -> None:
 
     df['wer'] = df.apply(partial(wer_scorer, column='OUTPUT:transcription'), axis=1)
 
-    df_oracle = df.groupby('audio').aggregate({'wer': 'min'})
+    assert not df['wer'].isna().values.any(), 'NAs appear in the dataset'
+
+    df_oracle = df.groupby('audio').aggregate(min_wer=('wer', 'min'), avg_wer=('wer', 'mean'))
 
     assert len(df_oracle) == len(df_gt), f'dataset size mismatch: oracle ({len(df_oracle)}) vs. gt ({len(df_gt)})'
 
-    assert not df['wer'].isna().values.any(), 'NAs appear in the dataset'
+    print(f'Oracle WER is {df_oracle["min_wer"].mean() * 100:.2f} ± {df_oracle["min_wer"].std() * 100:.2f}, '
+          f'computed on the {len(df_oracle)} audios with total {len(df)} transcriptions')
 
-    print(f'Oracle WER is {df_oracle["wer"].mean() * 100:.2f} ± {df_oracle["wer"].std() * 100:.2f}, '
+    print(f'Average WER is {df_oracle["avg_wer"].mean() * 100:.2f} ± {df_oracle["avg_wer"].std() * 100:.2f}, '
           f'computed on the {len(df_oracle)} audios with total {len(df)} transcriptions')
 
     df_random = df.groupby('audio').sample(1, random_state=0)

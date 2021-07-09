@@ -5,6 +5,7 @@ __author__ = 'Dmitry Ustalov'
 import argparse
 from functools import partial
 
+import numpy as np
 import pandas as pd
 
 from agreement import normalize
@@ -16,6 +17,7 @@ def main() -> None:
     parser.add_argument('gt', type=argparse.FileType('r', encoding='UTF-8'))
     parser.add_argument('toloka', type=argparse.FileType('r', encoding='UTF-8'))
     parser.add_argument('baselines', type=argparse.FileType('r', encoding='UTF-8'))
+    parser.add_argument('-o', '--output', nargs='?', type=argparse.FileType('w'))
     args = parser.parse_args()
 
     df_gt = pd.read_csv(args.gt, sep='\t', dtype=str, names=('audio', 'transcription'))
@@ -43,7 +45,8 @@ def main() -> None:
     df = pd.merge(df_gt, df_toloka, left_on='audio', right_on='INPUT:audio', suffixes=('_gt', '_toloka'))
     df['wer'] = df.apply(partial(wer_scorer, column='OUTPUT:transcription'), axis=1)
 
-    df_wer = df.groupby('audio').agg(min_wer=('wer', min), max_wer=('wer', max)).reset_index()
+    df_wer = df.groupby('audio').agg(min_wer=('wer', 'min'), max_wer=('wer', 'max'),
+                                     avg_wer=('wer', 'mean')).reset_index()
     df_wer = pd.merge(df_wer, df_baselines, on='audio')
     assert len(df_wer) == len(df_baselines), 'joint WER dataset lengths mismatch'
 
@@ -70,6 +73,11 @@ def main() -> None:
               f'{len(df_wer[df_wer[method + "_wer"] > df_wer["max_wer"]])}')
         print(f'# of {method.upper()} transcriptions worse than the best of Toloka is '
               f'{len(df_wer[df_wer[method + "_wer"] > df_wer["min_wer"]])}')
+
+        print('WER correlation to oracle is '
+              f'{np.corrcoef(df_wer["min_wer"], df_wer[method + "_wer"]).item(1):.4f} '
+              'and to the Toloka average is '
+              f'{np.corrcoef(df_wer["avg_wer"], df_wer[method + "_wer"]).item(1):.4f}')
 
 
 if __name__ == '__main__':
