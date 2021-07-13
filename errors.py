@@ -46,7 +46,9 @@ def main() -> None:
 
     df_baselines = pd.read_csv(args.baselines, sep='\t', dtype=str)
 
-    for method in ('rover', 'rasa', 'hrrasa'):
+    assert len(df_gt) == len(df_baselines), 'GT and baselines lengths mismatch'
+
+    for method in ('rover', 'rasa', 'hrrasa', 't5'):
         df_baselines[method + '_result'] = df_baselines[method + '_result'].apply(normalize)
         df_baselines[method + '_length'] = df_baselines[method + '_result'].str.split(' ').apply(len)
         df_baselines[method + '_wer'] = df_baselines.apply(partial(wer_scorer, column=method + '_result'), axis=1)
@@ -77,7 +79,7 @@ def main() -> None:
 
     df_errors = pd.DataFrame()
 
-    for method in ('rover', 'rasa', 'hrrasa'):
+    for method in ('rover', 'rasa', 'hrrasa', 't5'):
         print()
         print(f'# of correct {method.upper()} transcriptions is {len(df_wer[df_wer[method + "_correct"]])}')
 
