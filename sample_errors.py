@@ -3,7 +3,7 @@
 __author__ = 'Dmitry Ustalov'
 
 import argparse
-from collections import defaultdict
+from collections import defaultdict, Counter
 from functools import partial
 from typing import Set, DefaultDict
 
@@ -54,39 +54,25 @@ def main():
             _method = 'rasa' if method == 'hrrasa' else method
             visited_errors[audio].add(_method)
 
-    df_common_sample = df.sample(100 * 2, weights='wer', random_state=0)
-    df_common_sample.drop_duplicates(['audio'], inplace=True)
-    assert len(df_common_sample) >= 100
+    df_sample = df.sample(100 * 2, weights='wer', random_state=0)
+    df_sample.drop_duplicates(['audio'], inplace=True)
+    assert len(df_sample) >= 100
 
-    df_common_sample = df_common_sample[:100]
-    df_common_sample['method'] = 'crowd'
-    df_common_sample['error'] = 'common'
-    df_common_sample['result'] = df_common_sample['OUTPUT:transcription']
-    df_common_sample = df_common_sample[['method', 'error', 'audio', 'transcription', 'result', 'wer']]
-    df_common_sample.sort_values(['method', 'error', 'audio'], inplace=True)
-    df_common_sample.to_csv(args.crowd_errors, sep='\t', index=False)
+    df_sample = df_sample[:100]
+    df_sample['method'] = 'crowd'
+    df_sample['error'] = 'common'
+    df_sample['result'] = df_sample['OUTPUT:transcription']
+    df_sample = df_sample[['method', 'error', 'audio', 'transcription', 'result', 'wer']]
+    df_sample.sort_values(['method', 'error', 'audio'], inplace=True)
 
-    df_baselines_sample = pd.DataFrame()
+    df_sample.to_csv(args.crowd_errors, sep='\t', index=False)
 
-    for method in ('rover', 'rasa', 't5'):
-        audios = {audio for audio, methods in visited_errors.items() if methods == {method}}
+    counter: Counter[str] = Counter()
 
-        df_errors_local = df_errors[
-            df_errors['audio'].isin(audios) &
-            (df_errors['method'] == method) &
-            (df_errors['error'] == 'any_correct')
-        ]
-        df_baselines_sample_local = df_errors_local.sample(min(50, len(df_errors_local)), random_state=0)
-        df_baselines_sample_local['method'] = method
-        df_baselines_sample = df_baselines_sample.append(df_baselines_sample_local)
+    for methods in visited_errors.values():
+        counter[len(methods)] += 1
 
-    df_baselines_sample = pd.merge(df_toloka, df_baselines_sample, left_on='INPUT:audio', right_on='audio')
-    df_baselines_sample.rename(columns={'OUTPUT:transcription': 'crowd'}, inplace=True)
-    df_baselines_sample = df_baselines_sample[['method', 'error', 'audio', 'transcription', 'crowd', 'result', 'wer']]
-
-    df_baselines_sample.sort_values(['method', 'error', 'audio'], inplace=True)
-
-    df_baselines_sample.to_csv(args.baseline_errors, sep='\t', index=False)
+    print('Distribution of errors by number of affected methods: ', counter)
 
 
 if __name__ == '__main__':
