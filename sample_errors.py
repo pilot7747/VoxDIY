@@ -76,7 +76,7 @@ def main():
             (df_errors['method'] == method) &
             (df_errors['error'] == 'any_correct')
         ]
-        df_baselines_sample_local = df_errors_local.sample(min(75, len(df_errors_local)), random_state=0)
+        df_baselines_sample_local = df_errors_local.sample(min(50, len(df_errors_local)), random_state=0)
         df_baselines_sample_local['method'] = method
         df_baselines_sample = df_baselines_sample.append(df_baselines_sample_local)
 
