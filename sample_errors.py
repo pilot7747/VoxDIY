@@ -71,7 +71,11 @@ def main():
     for method in ('rover', 'rasa', 't5'):
         audios = {audio for audio, methods in visited_errors.items() if methods == {method}}
 
-        df_errors_local = df_errors[df_errors['audio'].isin(audios) & (df_errors['error'] == 'any_correct')]
+        df_errors_local = df_errors[
+            df_errors['audio'].isin(audios) &
+            (df_errors['method'] == method) &
+            (df_errors['error'] == 'any_correct')
+        ]
         df_baselines_sample_local = df_errors_local.sample(min(75, len(df_errors_local)), random_state=0)
         df_baselines_sample_local['method'] = method
         df_baselines_sample = df_baselines_sample.append(df_baselines_sample_local)
