@@ -1,6 +1,6 @@
 # About
 
-This repository provides data and code for *"Vox Populi, Vox DIY: Benchmark Dataset for Crowdsourced Audio Transcription"* paper.
+This repository provides data and code for *"CrowdSpeech and Vox DIY: Benchmark Dataset for Crowdsourced Audio Transcription"* paper.
 
 The collected transcriptions stored in `data/*-crowd.tsv`, ground-truth transcriptions stored in `data/*-gt.txt`. We also provide a code for the annotation process 
 and speech synthesis in `annotation` and `speech_sythesis` folders, respectively.
