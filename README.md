@@ -5,6 +5,13 @@ This repository provides data and code for [*"CrowdSpeech and Vox DIY: Benchmark
 The collected transcriptions stored in `data/*-crowd.tsv`, ground-truth transcriptions stored in `data/*-gt.txt`. We also provide a code for the annotation process 
 and speech synthesis in `annotation` and `speech_sythesis` folders, respectively.
 
+
+# Data
+
+**CrowdSpeech** and **VoxDIY** datasets stored in the `data` folder. Each dataset is associated with two filed: `<dataset>-<split>-crowd.tsv` and `<dataset>-<split>-gt.txt`. The first one contains three columns `INPUT:audio` — an audio file given to crowd workers, `OUTPUT:transcription` — worker's transcription and `ASSIGNMENT:worker_id` — a unique worker identifier. The second file contains two tab-separated columns without header: an audio file and the ground-truth transcription. 
+
+You can also download the CrowdSpeech dataset from [HuggingFace](https://huggingface.co/datasets/toloka/CrowdSpeech).
+
 # Evaluation
 First, you may need to install some dependencies:
 ```bash
