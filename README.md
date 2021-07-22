@@ -40,7 +40,7 @@ gets all the submits that are not accepted or rejected at the moment, calculates
 
 # T5 Model
 
-Our data is also [available](https://huggingface.co/datasets/toloka/CrowdSpeech) at HuggingFace Hub as well as the [T5 model](https://huggingface.co/toloka/t5-large-for-text-aggregation) trained on `train-clean`, `dev-clean` and `dev-other` parts of **CrowdSpeech**.
+Our data is also [available](https://huggingface.co/toloka) at HuggingFace Hub as well as the [T5 model](https://huggingface.co/toloka/t5-large-for-text-aggregation) trained on `train-clean`, `dev-clean` and `dev-other` parts of **CrowdSpeech**.
 
 This snippet shows the example of the model's inference:
 ```python
